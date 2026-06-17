@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors'); // Instálalo con `npm install cors` para permitir que el frontend de tu amigo se conecte
 const authRoutes = require('./routes/authRoutes');
 const academicRoutes = require('./routes/academicRoutes');
+const enrollmentRoutes = require('./routes/enrollmentRoutes');
+
 require('dotenv').config();
 
 const app = express();
@@ -13,6 +15,7 @@ app.use(express.json()); // Permite procesar formato JSON en las peticiones
 // Rutas del Microservicio
 app.use('/api/auth', authRoutes);
 app.use('/api/academico', academicRoutes);
+app.use('/api/matricula', enrollmentRoutes);
 
 // Puerto de escucha
 const PORT = process.env.PORT || 3001;
