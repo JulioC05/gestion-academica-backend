@@ -59,3 +59,36 @@ exports.login = async (req, res) => {
         res.status(500).json({ message: 'Error interno del servidor' });
     }
 };
+
+// Función temporal para registrar usuarios con contraseñas bien encriptadas
+exports.register = async (req, res) => {
+    const { correo, contrasena, rol_id } = req.body;
+
+    if (!correo || !contrasena || !rol_id) {
+        return res.status(400).json({ message: 'Todos los campos son requeridos' });
+    }
+
+    try {
+        const pool = await poolPromise;
+
+        // 1. Encriptar la contraseña usando Bcrypt de forma nativa
+        const salt = await bcrypt.genSalt(10);
+        const contrasenaEncriptada = await bcrypt.hash(contrasena, salt);
+
+        // 2. Insertar en la base de datos
+        await pool.request()
+            .input('correo', sql.VarChar, correo)
+            .input('contrasena', sql.VarChar, contrasenaEncriptada)
+            .input('rol_id', sql.Int, rol_id)
+            .query(`
+                INSERT INTO usuarios (correo, contrasena, rol_id, activo)
+                VALUES (@correo, @contrasena, @rol_id, 1)
+            `);
+
+        res.status(201).json({ message: 'Usuario registrado exitosamente en SSMS' });
+
+    } catch (error) {
+        console.error('Error en el registro:', error);
+        res.status(500).json({ message: 'Error al registrar usuario (puede que el correo ya exista)' });
+    }
+};
