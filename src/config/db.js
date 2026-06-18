@@ -4,15 +4,16 @@ require('dotenv').config();
 const dbConfig = {
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
-    server: '127.0.0.1', // Usamos la IP local directa en lugar de 'localhost'
+    // 🌟 CAMBIO CLAVE: Ahora leerá tu .env de forma dinámica
+    server: process.env.DB_SERVER || '127.0.0.1', 
     database: process.env.DB_DATABASE,
-    port: 1433,          // Forzamos el puerto directo que habilitaste
+    port: parseInt(process.env.DB_PORT) || 1433, // Opcional: también dinámico
     options: {
-        encrypt: false,  // Desactivado para evitar demoras de certificados en local
+        encrypt: false,  
         trustServerCertificate: true,
         enableArithAbort: true
     },
-    connectionTimeout: 5000 // Si falla, que avise a los 5 segundos y no espere 15
+    connectionTimeout: 5000 
 };
 
 const poolPromise = new sql.ConnectionPool(dbConfig)
