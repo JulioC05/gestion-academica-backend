@@ -92,3 +92,42 @@ exports.register = async (req, res) => {
         res.status(500).json({ message: 'Error al registrar usuario (puede que el correo ya exista)' });
     }
 };
+
+exports.getUserProfile = async (req, res) => {
+    // 🌟 AHORA SE LEE DE FORMA SEGURA DESDE EL TOKEN DESCIFRADO
+    const usuario_id = req.usuario.id;
+    const rol = req.usuario.rol; 
+
+    try {
+        const pool = await poolPromise;
+        let query = '';
+        const userRol = rol.toUpperCase();
+
+        if (userRol === 'ALUMNO') {
+            query = `SELECT id AS alumno_id, codigo_alumno, nombres, apellidos, fecha_nacimiento FROM alumnos WHERE usuario_id = @usuario_id`;
+        } else if (userRol === 'PROFESOR') {
+            query = `SELECT id AS profesor_id, codigo_empleado, nombres, apellidos, telefono FROM profesores WHERE usuario_id = @usuario_id`;
+        } else if (userRol === 'ADMIN' || userRol === 'ADMINISTRADOR') {
+            query = `SELECT id AS admin_id, 'Personal' AS nombres, 'Administrativo' AS apellidos, correo FROM usuarios WHERE id = @usuario_id`;
+        } else {
+            return res.status(400).json({ message: 'Rol no válido para obtener perfil.' });
+        }
+
+        const result = await pool.request()
+            .input('usuario_id', sql.Int, usuario_id)
+            .query(query);
+
+        if (result.recordset.length === 0) {
+            return res.status(404).json({ message: 'No se encontraron datos de perfil para este usuario.' });
+        }
+
+        res.json({
+            rol: userRol,
+            datos: result.recordset[0]
+        });
+
+    } catch (error) {
+        console.error('Error al obtener perfil:', error);
+        res.status(500).json({ message: 'Error interno al procesar el perfil.' });
+    }
+};
